@@ -21,7 +21,16 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - run: npm install
+        env:
+          # Explicitly clear any inherited NODE_AUTH_TOKEN (e.g. from an org-level
+          # NPM_TOKEN secret) so npm publishes via Trusted Publishing (OIDC) instead
+          # of falling back to token auth, which fails with E404 for this package.
+          NODE_AUTH_TOKEN: ''
 
       - run: npm run build
+        env:
+          NODE_AUTH_TOKEN: ''
 
       - run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ''
