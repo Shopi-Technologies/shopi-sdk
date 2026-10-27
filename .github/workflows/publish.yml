@@ -31,5 +31,10 @@ jobs:
         # OIDC id-token (granted by `permissions: id-token: write`) and publishes
         # via Trusted Publishing -- the same path that shipped v1.0.3.
         run: |
+          echo "=== NPM_CONFIG_USERCONFIG ==="; echo "$NPM_CONFIG_USERCONFIG"
+          echo "=== ~/.npmrc (global) ==="; cat ~/.npmrc 2>/dev/null || echo "(no global .npmrc)"
+          echo "=== userconfig file ==="; cat "$NPM_CONFIG_USERCONFIG" 2>/dev/null || echo "(no userconfig file)"
+          echo "=== env NODE_AUTH_TOKEN (redacted) ==="; echo "${NODE_AUTH_TOKEN:0:6}..."
           unset NODE_AUTH_TOKEN
+          echo "=== after unset, env ==="; env | grep -i npm || echo "(no npm env vars)"
           npm publish --access public --provenance
