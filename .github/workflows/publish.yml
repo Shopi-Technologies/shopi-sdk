@@ -25,16 +25,18 @@ jobs:
       - run: npm run build
 
       - name: Publish to npm via Trusted Publishing (OIDC)
-        # An org/repo-level secret injects NODE_AUTH_TOKEN into every run step.
-        # An *empty* value still routes npm into token-auth mode (ENEEDAUTH), so
-        # we truly `unset` it instead. With the variable absent, npm requests an
-        # OIDC id-token (granted by `permissions: id-token: write`) and publishes
-        # via Trusted Publishing -- the same path that shipped v1.0.3.
+        # actions/setup-node writes a temp .npmrc containing the literal string
+        #   //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+        # (an unexpanded reference to a secret injected from outside the workflow).
+        # npm reads that line as a literal token and fails with E404, regardless of
+        # what we do to the NODE_AUTH_TOKEN env var. Stripping the _authToken line
+        # from the userconfig file lets npm request an OIDC id-token (granted by
+        # `permissions: id-token: write`) and publish via Trusted Publishing -- the
+        # same path that shipped v1.0.3.
         run: |
-          echo "=== NPM_CONFIG_USERCONFIG ==="; echo "$NPM_CONFIG_USERCONFIG"
-          echo "=== ~/.npmrc (global) ==="; cat ~/.npmrc 2>/dev/null || echo "(no global .npmrc)"
-          echo "=== userconfig file ==="; cat "$NPM_CONFIG_USERCONFIG" 2>/dev/null || echo "(no userconfig file)"
-          echo "=== env NODE_AUTH_TOKEN (redacted) ==="; echo "${NODE_AUTH_TOKEN:0:6}..."
-          unset NODE_AUTH_TOKEN
-          echo "=== after unset, env ==="; env | grep -i npm || echo "(no npm env vars)"
+          userconfig="$NPM_CONFIG_USERCONFIG"
+          echo "=== .npmrc before ==="; cat "$userconfig" 2>/dev/null || echo "(none)"
+          grep -v '_authToken' "$userconfig" > "$userconfig.tmp" || true
+          mv "$userconfig.tmp" "$userconfig"
+          echo "=== .npmrc after ==="; cat "$userconfig" 2>/dev/null || echo "(none)"
           npm publish --access public --provenance
