@@ -334,11 +334,11 @@ rate-limited. To sign out, clear the server session and its cookie.
 | `checkout.createOrder(params)` | `checkout:write` | Place an order (pass `shipping_fee` from `shipping.calculate`) |
 | `checkout.validatePromo(params)` | `checkout:write` | Validate promo code |
 | `shipping.calculate(params)` | `checkout:write` | Calculate shipping fee from cart + destination |
-| `customer.sendVerification(email)` | `customer:write` | Email a 6-digit verification code |
-| `customer.verifyCode(email, code)` | `customer:write` | Verify the 6-digit code |
-| `customer.getProfile(email)` | `customer:read` | Get customer name + avatar |
-| `customer.upsertProfile(params)` | `customer:write` | Create/update customer profile |
-| `customer.listOrders(email)` | `customer:read` | List customer's orders for THIS shop |
+| `customer.sendVerification(email)` | `checkout:write` | Email a 6-digit verification code |
+| `customer.verifyCode(email, code)` | `checkout:write` | Verify the 6-digit code |
+| `customer.getProfile(email, customerToken)` | `checkout:write` | Get customer name + avatar after verification |
+| `customer.upsertProfile(params)` | `checkout:write` | Create/update customer profile; include `customerToken` |
+| `customer.listOrders(email, customerToken)` | `checkout:write` | List verified customer's orders for THIS shop |
 
 ### List Parameters
 
@@ -396,13 +396,11 @@ API keys can be scoped to limit access. Use `*` for full access or combine speci
 
 | Scope | Access |
 |-------|--------|
-| `*` | Full access (all endpoints) |
+| `*` | Legacy key access to the public storefront scopes below |
 | `shop:read` | Shop info, store settings, payment methods, theme |
 | `products:read` | Products, categories, reviews, discounts |
 | `listings:read` | Listings |
 | `rentals:read` | Rental items |
 | `services:read` | Services |
 | `content:read` | Pages, blog posts |
-| `checkout:write` | Orders, promo validation, review submission, shipping calculation |
-| `customer:read` | Read customer profile + their order history |
-| `customer:write` | Send/verify codes, create/update customer profile |
+| `checkout:write` | Orders, promo validation, reviews, shipping, and customer verification/profile requests (customer token also required for private data) |
