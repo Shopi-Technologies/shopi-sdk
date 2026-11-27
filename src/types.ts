@@ -450,6 +450,9 @@ export interface CustomerOrder {
 }
 
 export interface VerifyCodeResult {
+  success?: boolean;
+  customer_token?: string;
+  customer_token_expires_at?: string;
   verified?: boolean;
   ok?: boolean;
   error?: string;

@@ -84,10 +84,11 @@ export class Shopi {
       method?: string;
       body?: unknown;
       params?: Record<string, string | number | undefined>;
+      customerToken?: string;
       _retryCount?: number;
     } = {}
   ): Promise<T> {
-    const { method = "GET", body, params, _retryCount = 0 } = options;
+    const { method = "GET", body, params, customerToken, _retryCount = 0 } = options;
     let url = `${this.baseUrl}/${path}`;
 
     if (params) {
@@ -108,6 +109,7 @@ export class Shopi {
         method,
         headers: {
           "X-Shopi-Api-Key": this.apiKey,
+          ...(customerToken ? { "X-Shopi-Customer-Token": customerToken } : {}),
           ...(body ? { "Content-Type": "application/json" } : {}),
         },
         body: body ? JSON.stringify(body) : undefined,
@@ -447,29 +449,31 @@ export class Shopi {
     },
 
     /** Fetch the customer's profile (name, avatar). Returns null if not found. */
-    getProfile: async (email: string): Promise<CustomerProfile | null> => {
+    getProfile: async (email: string, customerToken: string): Promise<CustomerProfile | null> => {
       const res = await this.request<{ profile: CustomerProfile | null }>(
         "customer/profile",
-        { params: { email } },
+        { params: { email }, customerToken },
       );
       return res.profile;
     },
 
     /** Create or update the customer's profile (name, avatar_url). */
     upsertProfile: async (
-      params: { email: string; name?: string; avatar_url?: string | null },
+      params: { email: string; customerToken: string; name?: string; avatar_url?: string | null },
     ): Promise<{ ok?: boolean; error?: string }> => {
+      const { customerToken, ...body } = params;
       return this.request("customer/profile", {
         method: "POST",
-        body: params,
+        body,
+        customerToken,
       });
     },
 
     /** List the customer's orders for THIS shop only. */
-    listOrders: async (email: string): Promise<CustomerOrder[]> => {
+    listOrders: async (email: string, customerToken: string): Promise<CustomerOrder[]> => {
       const res = await this.request<{ orders: CustomerOrder[] }>(
         "customer/orders",
-        { params: { email } },
+        { params: { email }, customerToken },
       );
       return res.orders;
     },
